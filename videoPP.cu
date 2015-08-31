@@ -45,13 +45,29 @@ __device__ void RGB2YUV(uint32 *rgb, float *yuv)
 
     yuv[0]  = MUL(r, 0.2568) +
             MUL(g, 0.5041) +
-            MUL(b, 0.0979) + 16;
+            MUL(b, 0.0979);
     yuv[1]= MUL(r, -0.1482) +
             MUL(g, -0.2910) +
-            MUL(b, 0.4392) + 128;
+            MUL(b, 0.4392) + 512;
     yuv[2] = MUL(r, 0.4392) +
             MUL(g, -0.3678) +
-            MUL(b, -0.0714) + 128;
+            MUL(b, -0.0714) + 512;
+}
+
+__device__ uint32 RGBAPACK_10bit(uint32* irgb)
+{
+    float rgb[3];
+    uint32 ARGBpixel = 0;
+
+    rgb[0] = min(max((float)irgb[0], 0.0f), 1023.f);
+    rgb[1] = min(max((float)irgb[1], 0.0f), 1023.f);
+    rgb[2] = min(max((float)irgb[2], 0.0f), 1023.f);
+
+    ARGBpixel = (((uint32)rgb[2]  >> 2) |
+                 (((uint32)rgb[1] >> 2) << 8)  |
+                 (((uint32)rgb[0]   >> 2) << 16) | ((uint32)0xff<< 24));
+
+    return  ARGBpixel;
 }
 
 
@@ -184,8 +200,9 @@ extern "C" __global__ void ARGBpostprocess(uint32 *srcImage, size_t pitch, uint3
     RGBAUNPACK_10bit(srcImage[y*processingPitch + x], rgb);
 
     //todo
-
-    srcImage[y*processingPitch + x] = RGBAPACK_10bit((float*)rgb);
+    rgb[1] = rgb[2] = 0;
+    
+    srcImage[y*processingPitch + x] = RGBAPACK_10bit(rgb);
 }
 
 

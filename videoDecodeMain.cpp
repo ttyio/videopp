@@ -346,11 +346,14 @@ void DecodeFrame(CUdeviceptr ppDecodedFrame, size_t nDecodedPitch,
                                       width, height, 0));
 
 
+    checkCudaErrors(cudaLaunchARGBpostprocess(ppRGBAFrame, nRGBAPitch, width, height, 0));
+
     checkCudaErrors(cudaLaunchARGBtoNV12Drv(ppRGBAFrame, nRGBAPitch,
                                       ppNV12Frame, nDecodedPitch,
                                       width, height, 0));
 
-    checkCudaErrors(cudaLaunchARGBpostprocess(ppRGBAFrame, nRGBAPitch, width, height, 0));
+
+    checkCudaErrors(cuCtxSynchronize());
 
     // EncodeDevFrame(ppDecodedFrame, nDecodedPitch);
 
